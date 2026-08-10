@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Recipe Extractor</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Recipe Extractor</h1>
+        <p>Turn the post you're viewing into a usable recipe.</p>
+      </div>
+      <button id="libraryBtn" class="ghost">My Recipes</button>
+    </header>
+
+    <section class="card">
+      <label for="url">TikTok or Instagram link</label>
+      <input id="url" type="url" placeholder="Open a recipe post, or paste its link here">
+      <div class="row">
+        <button id="usePageBtn" class="secondary">Use current page</button>
+        <button id="extractBtn" class="primary">Extract recipe</button>
+      </div>
+      <p id="status" class="status"></p>
+    </section>
+
+    <section id="result" class="card hidden">
+      <div class="resultHeader">
+        <div>
+          <h2 id="recipeName"></h2>
+          <p id="meta"></p>
+        </div>
+        <button id="saveBtn" class="primary compact">Save</button>
+      </div>
+
+      <h3>Ingredients</h3>
+      <ul id="ingredients"></ul>
+
+      <h3>Instructions</h3>
+      <ol id="instructions"></ol>
+
+      <details>
+        <summary>Notes & source details</summary>
+        <div id="notes"></div>
+        <h4>Not stated</h4>
+        <ul id="missing"></ul>
+        <h4>Transcript</h4>
+        <p id="transcript" class="transcript"></p>
+      </details>
+    </section>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>
