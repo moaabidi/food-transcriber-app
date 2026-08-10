@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 
 import yt_dlp
 from dotenv import load_dotenv
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, request
 from openai import OpenAI
 
 load_dotenv()
@@ -25,10 +25,18 @@ ALLOWED_HOSTS = {
 }
 
 
+@app.after_request
+def allow_extension_requests(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    response.headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS"
+    return response
+
+
 def validate_url(url: str) -> None:
     parsed = urlparse(url)
     if parsed.scheme not in {"http", "https"} or parsed.hostname not in ALLOWED_HOSTS:
-        raise ValueError("Please paste a public TikTok or Instagram link.")
+        raise ValueError("Please use a public TikTok or Instagram post/reel link.")
 
 
 def download_media(url: str, workdir: str):
@@ -54,7 +62,7 @@ def download_media(url: str, workdir: str):
     if not os.path.exists(media_path):
         candidates = list(Path(workdir).glob("source.*"))
         if not candidates:
-            raise RuntimeError("The media could not be downloaded from this post.")
+            raise RuntimeError("Could not download media from this post. It may be private, restricted, or require login.")
         media_path = str(candidates[0])
 
     metadata = {
@@ -80,24 +88,33 @@ def transcribe(media_path: str) -> str:
 
 def extract_recipe(transcript: str, metadata: dict) -> dict:
     prompt = f"""
-You are converting a social-media cooking post into a precise recipe record.
+Convert this social-media cooking post into a precise recipe record.
 
-Use ONLY facts supported by the creator's spoken transcript or caption/metadata below.
-Do not invent quantities, temperatures, timings, serving counts, or ingredients.
-If a relevant detail is missing, use null or explicitly say "not stated".
-Separate ingredients from optional garnishes when possible.
-Put instructions in the order the creator performs or describes them.
-Preserve useful details such as pan size, heat level, rest time, texture cues, substitutions, storage, and serving suggestions.
+Use ONLY details supported by the spoken transcript or caption/metadata.
+Never invent quantities, temperatures, times, serving counts, or ingredients.
+If a detail is missing, use null or list it in missing_details.
+Keep instructions in the order performed or described.
+Preserve pan sizes, heat levels, texture cues, rest times, substitutions, storage, and serving suggestions when stated.
+
+For ingredients, quantity_value should be a JSON number only when an explicit amount can be represented numerically. Convert common fractions to decimals, e.g. 1/2 -> 0.5 and 1 1/2 -> 1.5. Keep the original wording in quantity_text. Set scalable false for amounts like "to taste", "a splash", or unspecified amounts.
 
 Return ONLY valid JSON with exactly this shape:
 {{
   "recipe_name": string,
   "creator": string|null,
-  "yield": string|null,
+  "yield_text": string|null,
+  "yield_servings": number|null,
   "prep_time": string|null,
   "cook_time": string|null,
   "total_time": string|null,
-  "ingredients": [{{"item": string, "quantity": string|null, "notes": string|null}}],
+  "ingredients": [{{
+    "item": string,
+    "quantity_value": number|null,
+    "quantity_text": string|null,
+    "unit": string|null,
+    "notes": string|null,
+    "scalable": boolean
+  }}],
   "instructions": [string],
   "notes": [string],
   "missing_details": [string]
@@ -120,20 +137,23 @@ SPOKEN TRANSCRIPT:
     return json.loads(text)
 
 
-@app.get("/")
-def home():
-    return render_template("index.html")
+@app.get("/health")
+def health():
+    return jsonify({"ok": True})
 
 
-@app.post("/api/transcribe")
+@app.route("/api/transcribe", methods=["POST", "OPTIONS"])
 def transcribe_recipe():
+    if request.method == "OPTIONS":
+        return ("", 204)
+
     body = request.get_json(silent=True) or {}
     url = (body.get("url") or "").strip()
 
     try:
         validate_url(url)
         if not os.getenv("OPENAI_API_KEY"):
-            raise RuntimeError("OPENAI_API_KEY is not configured.")
+            raise RuntimeError("OPENAI_API_KEY is not configured in .env.")
 
         with tempfile.TemporaryDirectory() as workdir:
             media_path, metadata = download_media(url, workdir)
@@ -151,4 +171,4 @@ def transcribe_recipe():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")), debug=True)
+    app.run(host="127.0.0.1", port=int(os.getenv("PORT", "5000")), debug=False)
