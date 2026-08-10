@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>My Recipes</title>
+  <link rel="stylesheet" href="library.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>My Recipes</h1>
+      <p>Saved locally in Chrome on this computer.</p>
+    </div>
+    <input id="search" type="search" placeholder="Search recipes or ingredients">
+  </header>
+
+  <main class="layout">
+    <aside>
+      <div id="recipeList" class="recipeList"></div>
+      <div id="emptyState" class="empty hidden">No saved recipes yet. Open TikTok or Instagram and use the Recipe Extractor extension.</div>
+    </aside>
+
+    <section id="editor" class="editor hidden">
+      <div class="editorHeader">
+        <div class="grow">
+          <input id="name" class="titleInput" aria-label="Recipe name">
+          <div id="sourceMeta" class="sourceMeta"></div>
+        </div>
+        <div class="actions">
+          <button id="openSource" class="secondary">Original post</button>
+          <button id="duplicate" class="secondary">Duplicate</button>
+          <button id="delete" class="danger">Delete</button>
+        </div>
+      </div>
+
+      <section class="panel servingsPanel">
+        <div>
+          <label>Original servings</label>
+          <strong id="originalServings">Not stated</strong>
+        </div>
+        <div>
+          <label for="servings">Scale to</label>
+          <div class="servingControls">
+            <button id="minus">−</button>
+            <input id="servings" type="number" min="0.25" step="0.25">
+            <button id="plus">+</button>
+            <button id="resetScale" class="secondary">Reset</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="sectionHeader">
+          <h2>Ingredients</h2>
+          <button id="addIngredient" class="secondary">+ Add ingredient</button>
+        </div>
+        <div id="ingredients"></div>
+      </section>
+
+      <section class="panel">
+        <div class="sectionHeader">
+          <h2>Instructions</h2>
+          <button id="addStep" class="secondary">+ Add step</button>
+        </div>
+        <div id="instructions"></div>
+      </section>
+
+      <section class="panel twoCol">
+        <div>
+          <h2>Notes</h2>
+          <textarea id="notes" rows="8" placeholder="One note per line"></textarea>
+        </div>
+        <div>
+          <h2>Transcript</h2>
+          <textarea id="transcript" rows="8" readonly></textarea>
+        </div>
+      </section>
+
+      <div class="saveBar">
+        <span id="saveStatus">Changes save automatically.</span>
+        <button id="saveNow" class="primary">Save changes</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="library.js"></script>
+</body>
+</html>
